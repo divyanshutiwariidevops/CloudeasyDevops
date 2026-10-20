@@ -16,9 +16,9 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
   },
   icons: {
-    icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
+    icon: '/cloudeasy-devops-favicon.png',
+    shortcut: '/cloudeasy-devops-favicon.png',
+    apple: '/cloudeasy-devops-favicon.png',
   },
 }
 

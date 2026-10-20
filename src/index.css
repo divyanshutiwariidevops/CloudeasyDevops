@@ -164,11 +164,17 @@ pre,
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+  background: transparent;
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  box-shadow: 0 8px 16px rgba(79, 70, 229, 0.28);
+  overflow: hidden;
+}
+
+.brand-logo-full {
+  width: auto;
+  height: auto;
+  overflow: visible;
 }
 
 .brand-copy {

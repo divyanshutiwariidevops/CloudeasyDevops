@@ -97,11 +97,8 @@ export function Login() {
     <div className="login-shell">
       <section className="login-hero">
         <div className="d-flex align-items-center gap-3 mb-4">
-          <div className="brand-logo">
-            <BrandLogo size={48} />
-          </div>
-          <div>
-            <p className="brand-title mb-0">{site.brandName}</p>
+          <div className="brand-logo brand-logo-full">
+            <BrandLogo variant="wordmark" size={76} />
           </div>
         </div>
         <h1>{site.brandName}</h1>
