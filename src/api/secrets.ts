@@ -4,7 +4,8 @@ import type { SecretVariable } from '../types'
 export interface StoredSecret {
   id: string
   name: string
-  value: string
+  value?: string
+  sealed?: boolean
   updatedAt?: string
 }
 
@@ -12,7 +13,7 @@ export function toSecretVariable(item: StoredSecret): SecretVariable {
   return {
     id: item.id,
     key: item.name,
-    value: item.value,
+    value: item.value || '',
     description: '',
     environment: 'Production',
     projectId: '',
@@ -35,6 +36,10 @@ export async function updateSecretApi(id: string, payload: { name?: string; valu
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
+}
+
+export async function revealSecret(id: string) {
+  return authFetch<{ value: string }>(`/api/secrets/${id}/reveal`, { method: 'POST' })
 }
 
 export async function deleteSecretApi(id: string) {

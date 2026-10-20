@@ -1,7 +1,7 @@
 {
   "name": "Cloudeasy Devops Portal",
-  "short_name": "Cloudeasy",
-  "description": "A blogging DevOps platform made by Divyanshu Tiwari.",
+  "short_name": "Cloudeasy Devops Portal",
+  "description": "Inventory management workspace made by Divyanshu Tiwari.",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

@@ -9,7 +9,7 @@ import { useApp } from '../context/AppContext'
 import { NAV_ITEMS } from '../navigation'
 
 export function Login() {
-  const { login, pushToast } = useApp()
+  const { login, pushToast, site } = useApp()
   const router = useRouter()
   const [step, setStep] = useState<'email' | 'otp' | '2fa'>('email')
   const [email, setEmail] = useState('')
@@ -101,12 +101,11 @@ export function Login() {
             <BrandLogo size={48} />
           </div>
           <div>
-            <p className="brand-kicker mb-0">Inventory</p>
-            <p className="brand-title mb-0">Devops Portal</p>
+            <p className="brand-title mb-0">{site.brandName}</p>
           </div>
         </div>
-        <h1>Devops Portal</h1>
-        <p>Inventory management for projects, secrets, APIs, and servers. Made by Divyanshu Tiwari.</p>
+        <h1>{site.brandName}</h1>
+        <p>{site.lead}</p>
         <ul className="login-points">
           {NAV_ITEMS.filter((item) => item.path !== '/invitation').map((item) => (
             <li key={item.path}>
@@ -123,8 +122,7 @@ export function Login() {
               <BrandLogo size={36} />
             </div>
             <div>
-              <p className="brand-kicker mb-0">Inventory</p>
-              <p className="brand-title mb-0">Devops Portal</p>
+              <p className="brand-title mb-0">{site.brandName}</p>
             </div>
           </div>
           {step === 'email' ? (

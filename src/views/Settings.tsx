@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { confirmTwoFactor, requestTwoFactor, saveAvatar } from '../api/account'
 import { UserAvatar } from '../components/UserAvatar'
 import { Modal } from '../components/Modal'
@@ -8,7 +8,7 @@ import { OtpInputs } from '../components/OtpInputs'
 import { ThemeSwitch } from '../components/ThemeSwitch'
 import { useApp } from '../context/AppContext'
 
-const SECTIONS = ['General', 'Profile', 'Appearance', 'Notifications', 'Security', 'Preferences'] as const
+const SECTIONS = ['General', 'Profile', 'Website', 'Appearance', 'Notifications', 'Security', 'Preferences'] as const
 type Section = (typeof SECTIONS)[number]
 
 export function Settings() {
@@ -28,7 +28,15 @@ export function Settings() {
     sendTestAlert,
     pushToast,
     isAdmin,
+    site,
+    saveSite,
   } = useApp()
+  const [siteDraft, setSiteDraft] = useState(site)
+  const [siteSaving, setSiteSaving] = useState(false)
+
+  useEffect(() => {
+    setSiteDraft(site)
+  }, [site])
   const [section, setSection] = useState<Section>('General')
   const [saving, setSaving] = useState(false)
   const [twoFactorOpen, setTwoFactorOpen] = useState(false)
@@ -96,7 +104,7 @@ export function Settings() {
     <div className="row g-3">
       <div className="col-12 col-lg-3">
         <div className="panel p-3 settings-nav">
-          {SECTIONS.map((item) => (
+          {SECTIONS.filter((item) => item !== 'Website' || isAdmin).map((item) => (
             <button key={item} type="button" className={item === section ? 'active' : ''} onClick={() => setSection(item)}>
               {item}
             </button>
@@ -108,7 +116,7 @@ export function Settings() {
           {section === 'General' ? (
             <>
               <h5>General</h5>
-              <p className="text-secondary">Workspace identity for Devops Portal, an inventory management app made by Divyanshu Tiwari.</p>
+              <p className="text-secondary">Workspace identity for Cloudeasy Devops Portal, an inventory management app made by Divyanshu Tiwari.</p>
               <div className="row g-3">
                 <div className="col-md-6">
                   <label className="form-label">Name</label>
@@ -133,6 +141,95 @@ export function Settings() {
               <p className="text-secondary small mt-3 mb-0">
                 To add a desktop shortcut, use your browser menu: Install app or Add to Home Screen.
               </p>
+            </>
+          ) : null}
+
+          {section === 'Website' && isAdmin ? (
+            <>
+              <h5>Website</h5>
+              <p className="text-secondary">These fields appear on the landing page, login screen, and sidebar. Only the admin email can save them.</p>
+              <div className="profile-photo-row mb-4">
+                <UserAvatar name={siteDraft.ownerName || siteDraft.brandName} src={siteDraft.logoUrl} size="md" />
+                <div>
+                  <p className="mb-2">Profile photo</p>
+                  <p className="text-secondary small">Shown as the site logo. PNG or JPEG.</p>
+                  <label className="btn btn-ghost mb-0">
+                    Upload photo
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg"
+                      hidden
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        event.target.value = ''
+                        if (!file) return
+                        const image = new Image()
+                        const reader = new FileReader()
+                        reader.onload = () => {
+                          image.onload = () => {
+                            const canvas = document.createElement('canvas')
+                            canvas.width = 256
+                            canvas.height = 256
+                            const context = canvas.getContext('2d')
+                            if (!context) return
+                            const side = Math.min(image.width, image.height)
+                            context.drawImage(
+                              image,
+                              (image.width - side) / 2,
+                              (image.height - side) / 2,
+                              side,
+                              side,
+                              0,
+                              0,
+                              256,
+                              256,
+                            )
+                            setSiteDraft((current) => ({ ...current, logoUrl: canvas.toDataURL('image/jpeg', 0.82) }))
+                          }
+                          image.src = String(reader.result || '')
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Site name</label>
+                  <input className="form-control" value={siteDraft.brandName} onChange={(event) => setSiteDraft({ ...siteDraft, brandName: event.target.value })} />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Your name</label>
+                  <input className="form-control" value={siteDraft.ownerName} onChange={(event) => setSiteDraft({ ...siteDraft, ownerName: event.target.value })} />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Landing headline</label>
+                  <input className="form-control" value={siteDraft.headline} onChange={(event) => setSiteDraft({ ...siteDraft, headline: event.target.value })} />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Landing description</label>
+                  <textarea className="form-control" rows={4} value={siteDraft.lead} onChange={(event) => setSiteDraft({ ...siteDraft, lead: event.target.value })} />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label">Blog heading</label>
+                  <input className="form-control" value={siteDraft.blogTitle} onChange={(event) => setSiteDraft({ ...siteDraft, blogTitle: event.target.value })} />
+                </div>
+              </div>
+              <button
+                className="btn btn-accent mt-3"
+                type="button"
+                disabled={siteSaving}
+                onClick={() => {
+                  setSiteSaving(true)
+                  void saveSite(siteDraft)
+                    .then(() => pushToast('Website updated'))
+                    .catch((error) => pushToast(error instanceof Error ? error.message : 'Unable to update the website', 'error'))
+                    .finally(() => setSiteSaving(false))
+                }}
+              >
+                {siteSaving ? 'Saving…' : 'Save website'}
+              </button>
             </>
           ) : null}
 

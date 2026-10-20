@@ -70,7 +70,7 @@ export function verifyTotp(secret, code) {
 }
 
 export function otpauthUrl(email, secret) {
-  const label = encodeURIComponent(`Devops Portal:${email}`)
-  const issuer = encodeURIComponent('Devops Portal')
+  const label = encodeURIComponent(`Cloudeasy Devops Portal:${email}`)
+  const issuer = encodeURIComponent('Cloudeasy Devops Portal')
   return `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`
 }

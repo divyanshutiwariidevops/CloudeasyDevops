@@ -7,7 +7,7 @@ import { Providers } from './providers'
 
 export const metadata: Metadata = {
   title: 'Cloudeasy Devops Portal',
-  description: 'Cloudeasy Devops Portal is a blogging DevOps platform made by Divyanshu Tiwari.',
+  description: 'Cloudeasy Devops Portal is an inventory management workspace made by Divyanshu Tiwari.',
   manifest: '/manifest.webmanifest',
   applicationName: 'Cloudeasy Devops Portal',
   appleWebApp: {

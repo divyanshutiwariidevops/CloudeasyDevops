@@ -9,13 +9,14 @@ import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
 import { connectDb, isMongoConfigured } from './db.js'
 import { sendInviteEmail, sendOtpEmail } from './mail.js'
-import { encryptSecret, decryptSecret } from './cryptoSecrets.js'
+import { encryptSecret, decryptSecret, isCurrentCipher } from './cryptoSecrets.js'
 import { publicStudio, sendStudioRequest } from './httpStudio.js'
 import multer from 'multer'
 import { Secret } from './models/Secret.js'
 import { Invitation } from './models/Invitation.js'
 import { GeneratedFile } from './models/GeneratedFile.js'
 import { DocNote } from './models/DocNote.js'
+import { Site } from './models/Site.js'
 import { Workbook } from './models/Workbook.js'
 import { Shortcut } from './models/Shortcut.js'
 import { StudioRequest } from './models/StudioRequest.js'
@@ -41,7 +42,6 @@ import {
 import { canSendOtp, saveOtp, verifyStoredOtp } from './otpStore.js'
 import { generateTotpSecret, otpauthUrl, verifyTotp } from './totp.js'
 import QRCode from 'qrcode'
-import { attachLocalTerminal, localTerminalStatus, startLocalTerminal } from './localTerminal.js'
 import { accessForEmail, isAdminEmail, WORKSPACE_ROLES } from './privileges.js'
 import { addNotification, ensureUser, publicUser } from './userService.js'
 import { corsOptions } from './corsConfig.js'
@@ -98,7 +98,7 @@ function fallbackUser(email) {
   return {
     email,
     name: access.name,
-    workspaceName: 'Devops Portal',
+    workspaceName: 'Cloudeasy Devops Portal',
     role: access.role,
     team: access.team,
     timezone: 'UTC',
@@ -221,6 +221,58 @@ async function issueOtp(email, purpose) {
     await sendOtpEmail(email, otp, purpose)
     await saveOtp(email, otp, otpPepper, otpTtlMs, purpose)
   }
+
+function publicSite(doc) {
+  return {
+    brandName: doc?.brandName || 'Cloudeasy Devops Portal',
+    ownerName: doc?.ownerName || 'Divyanshu Tiwari',
+    headline: doc?.headline || 'Projects, secrets, APIs, and servers in one workspace.',
+    lead: doc?.lead || 'A DevOps workspace made by Divyanshu Tiwari. Read the notes below, then sign in when you are ready to work.',
+    blogTitle: doc?.blogTitle || 'Public posts',
+    logoUrl: doc?.logoUrl || '',
+  }
+}
+
+async function loadSite() {
+  let doc = await Site.findOne({ key: 'public' })
+  if (!doc) doc = await Site.create({ key: 'public' })
+  return doc
+}
+
+app.get('/api/site', requireDb, async (_req, res) => {
+  try {
+    const doc = await loadSite()
+    return res.json({ site: publicSite(doc) })
+  } catch (error) {
+    return res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to load the website' })
+  }
+})
+
+app.put('/api/site', authUser, requireDb, async (req, res) => {
+  try {
+    if (!isAdminEmail(req.user.email, adminEmails)) {
+      return res.status(403).json({ message: 'Only the admin email can update the website.' })
+    }
+    const doc = await loadSite()
+    const body = req.body || {}
+    const text = (value, max) => String(value || '').trim().slice(0, max)
+    if (typeof body.brandName === 'string') doc.brandName = text(body.brandName, 80) || doc.brandName
+    if (typeof body.ownerName === 'string') doc.ownerName = text(body.ownerName, 80) || doc.ownerName
+    if (typeof body.headline === 'string') doc.headline = text(body.headline, 180) || doc.headline
+    if (typeof body.lead === 'string') doc.lead = text(body.lead, 500) || doc.lead
+    if (typeof body.blogTitle === 'string') doc.blogTitle = text(body.blogTitle, 80) || doc.blogTitle
+    if (typeof body.logoUrl === 'string') {
+      if (!body.logoUrl) doc.logoUrl = ''
+      else if (!body.logoUrl.startsWith('data:image/')) return res.status(400).json({ message: 'Upload a PNG or JPEG image.' })
+      else if (body.logoUrl.length > 350_000) return res.status(400).json({ message: 'Image is too large. Use a smaller photo.' })
+      else doc.logoUrl = body.logoUrl
+    }
+    await doc.save()
+    return res.json({ site: publicSite(doc) })
+  } catch (error) {
+    return res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to save the website' })
+  }
+})
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true })
@@ -529,9 +581,18 @@ function publicSecret(doc) {
   return {
     id: String(doc._id),
     name: doc.name,
-    value: decryptSecret(doc.valueEncrypted),
+    sealed: true,
     updatedAt: doc.updatedAt,
   }
+}
+
+async function openSecret(doc) {
+  const value = decryptSecret(doc.valueEncrypted)
+  if (value && !isCurrentCipher(doc.valueEncrypted)) {
+    doc.valueEncrypted = encryptSecret(value)
+    await doc.save()
+  }
+  return value
 }
 
 app.get('/api/secrets', authUser, requireDb, requirePrivilege('secrets.view'), async (req, res) => {
@@ -576,6 +637,18 @@ app.patch('/api/secrets/:id', authUser, requireDb, requirePrivilege('secrets.man
     return res.json({ secret: publicSecret(doc) })
   } catch (error) {
     return res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to update secret' })
+  }
+})
+
+app.post('/api/secrets/:id/reveal', authUser, requireDb, requirePrivilege('secrets.view'), async (req, res) => {
+  try {
+    const doc = await Secret.findOne({ _id: req.params.id, ownerEmail: req.user.email })
+    if (!doc) return res.status(404).json({ message: 'Secret not found' })
+    const value = await openSecret(doc)
+    if (!value) return res.status(500).json({ message: 'Unable to open this secret.' })
+    return res.json({ value })
+  } catch (error) {
+    return res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to open secret' })
   }
 })
 
@@ -1095,11 +1168,55 @@ function publicDoc(doc) {
     font: doc.font || 'IBM Plex Sans',
     size: doc.size || '14',
     kind: doc.kind === 'folder' ? 'folder' : 'file',
+    visibility: doc.visibility === 'public' ? 'public' : 'private',
     parentId: doc.parentId || null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   }
 }
+
+function safePublicHtml(html) {
+  return stripHtml(html)
+    .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, '')
+    .replace(/javascript:/gi, '')
+}
+
+app.get('/api/public/docs', requireDb, async (_req, res) => {
+  try {
+    const items = await DocNote.find({ visibility: 'public', kind: 'file' }).sort({ updatedAt: -1 })
+    return res.json({
+      docs: items.map((doc) => ({
+        id: String(doc._id),
+        title: doc.title || 'Untitled',
+        preview: previewFromHtml(doc.html) || doc.preview || '',
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
+      })),
+    })
+  } catch (error) {
+    return res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to load documents' })
+  }
+})
+
+app.get('/api/public/docs/:id', requireDb, async (req, res) => {
+  try {
+    const doc = await DocNote.findOne({ _id: req.params.id, visibility: 'public', kind: 'file' })
+    if (!doc) return res.status(404).json({ message: 'Document not found' })
+    return res.json({
+      doc: {
+        id: String(doc._id),
+        title: doc.title || 'Untitled',
+        html: safePublicHtml(doc.html),
+        preview: doc.preview || '',
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
+      },
+    })
+  } catch (error) {
+    return res.status(500).json({ message: error instanceof Error ? error.message : 'Unable to load document' })
+  }
+})
 
 app.get('/api/docs', authUser, requireDb, async (req, res) => {
   try {
@@ -1128,6 +1245,7 @@ app.post('/api/docs', authUser, requireDb, requirePrivilege('docs.manage'), asyn
       font: String(req.body?.font || 'IBM Plex Sans'),
       size: String(req.body?.size || '14'),
       kind,
+      visibility: kind === 'file' && req.body?.visibility === 'public' ? 'public' : 'private',
       parentId,
     })
     return res.status(201).json({ doc: publicDoc(doc) })
@@ -1147,6 +1265,9 @@ app.patch('/api/docs/:id', authUser, requireDb, requirePrivilege('docs.manage'),
     }
     if (typeof req.body?.font === 'string' && req.body.font.trim()) doc.font = req.body.font.trim()
     if (typeof req.body?.size === 'string' && req.body.size.trim()) doc.size = req.body.size.trim()
+    if (req.body?.visibility === 'public' || req.body?.visibility === 'private') {
+      doc.visibility = doc.kind === 'folder' ? 'private' : req.body.visibility
+    }
     if (typeof req.body?.parentId === 'string' || req.body?.parentId === null) {
       const parentId = req.body.parentId ? String(req.body.parentId).trim() : null
       if (parentId) {
@@ -1358,41 +1479,6 @@ function sanitizePreferences(input) {
   return next
 }
 
-app.get('/api/terminal/status', authUser, async (req, res) => {
-  const account = await loadAccount(req.user.email)
-  if (!account.privileges?.includes('ssh.connect')) {
-    return res.status(403).json({ message: 'Terminal access required.' })
-  }
-  try {
-    return res.json(localTerminalStatus())
-  } catch (error) {
-    return res.status(500).json({
-      ready: false,
-      running: false,
-      image: 'local',
-      message: error instanceof Error ? error.message : 'Unable to check the local shell',
-    })
-  }
-})
-
-app.post('/api/terminal/up', authUser, async (req, res) => {
-  const account = await loadAccount(req.user.email)
-  if (!account.privileges?.includes('ssh.connect')) {
-    return res.status(403).json({ message: 'Terminal access required.' })
-  }
-  try {
-    const status = startLocalTerminal()
-    return res.status(status.running ? 200 : 503).json(status)
-  } catch (error) {
-    return res.status(500).json({
-      ready: false,
-      running: false,
-      image: 'local',
-      message: error instanceof Error ? error.message : 'Unable to start the local shell',
-    })
-  }
-})
-
 app.use((error, req, res, next) => {
   console.error('API error:', error instanceof Error ? error.message : error)
   if (res.headersSent) return next(error)
@@ -1400,13 +1486,6 @@ app.use((error, req, res, next) => {
 })
 
 export { app, jwtSecret, loadAccount }
-
-export function attachApi() {
-  return attachLocalTerminal(null, {
-    jwtSecret,
-    resolveAccess: async (email) => loadAccount(email),
-  })
-}
 
 export async function bootServices() {
   assertRuntimeSecrets()
@@ -1419,12 +1498,8 @@ export async function bootServices() {
 
 if (process.env.NEXT_EMBED !== '1') {
   const httpServer = http.createServer(app)
-  const terminal = attachApi()
-  httpServer.on('upgrade', (request, socket, head) => {
-    terminal.handleUpgrade(request, socket, head)
-  })
   httpServer.listen(port, async () => {
-    console.log(`Devops Portal API running on http://localhost:${port}`)
+    console.log(`Cloudeasy Devops Portal API running on http://localhost:${port}`)
     await bootServices()
   })
 }

@@ -11,7 +11,7 @@ export function Dashboard() {
     <div className="d-flex flex-column gap-4">
       <section className="welcome-banner">
         <p className="page-kicker mb-2">INVENTORY MANAGEMENT</p>
-        <h1>Devops Portal</h1>
+        <h1>Cloudeasy Devops Portal</h1>
         <p>
           Inventory management for projects, infrastructure, secrets, API tools, and server access.
           Made by Divyanshu Tiwari.

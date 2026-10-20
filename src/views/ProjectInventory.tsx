@@ -168,19 +168,20 @@ function mergeStyle(current: CellStyle | undefined, patch: CellStyle) {
 }
 
 function cellCss(style: CellStyle | undefined, header = false): CSSProperties {
-  const size = style?.size || 13
+  const size = style?.size || 15
+  const row = Math.max(44, size + 28)
   return {
     fontWeight: style?.bold || header ? 700 : 400,
     fontStyle: style?.italic ? 'italic' : 'normal',
     textDecoration: style?.underline ? 'underline' : 'none',
-    fontFamily: style?.font || 'Inter, Arial, sans-serif',
+    fontFamily: style?.font || 'Calibri, Inter, Arial, sans-serif',
     fontSize: `${size}px`,
     color: style?.color || (header ? '#f8fafc' : undefined),
     background: style?.bg || undefined,
     textAlign: style?.align || 'left',
-    minHeight: `${Math.max(28, size + 12)}px`,
-    height: `${Math.max(28, size + 12)}px`,
-    lineHeight: `${Math.max(28, size + 12)}px`,
+    minHeight: `${row}px`,
+    height: `${row}px`,
+    lineHeight: `${row}px`,
   }
 }
 
@@ -674,13 +675,13 @@ export function ProjectInventory() {
             </select>
             <select
               className="sheet-size"
-              value={String(currentStyle.size || 13)}
+              value={String(currentStyle.size || 15)}
               disabled={!canEdit}
               onChange={(event) => applyStyle({ size: Number(event.target.value) })}
               title="Font size"
             >
-              {!SIZES.includes(currentStyle.size || 13) ? (
-                <option value={currentStyle.size || 13}>{currentStyle.size || 13}</option>
+              {!SIZES.includes(currentStyle.size || 15) ? (
+                <option value={currentStyle.size || 15}>{currentStyle.size || 15}</option>
               ) : null}
               {SIZES.map((size) => (
                 <option key={size} value={size}>

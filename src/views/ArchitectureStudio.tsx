@@ -464,7 +464,7 @@ export function ArchitectureStudio() {
     const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"/><title>${escapeHtml(board.title)}</title>
 <style>body{margin:0;font-family:IBM Plex Sans,system-ui,sans-serif;background:#f1f5f9;color:#0f172a}header{padding:24px 32px 8px}h1{margin:0 0 8px}.board{margin:16px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:auto}</style>
-</head><body><header><p>Devops Portal</p><h1>${escapeHtml(board.title)}</h1><p>Exported ${new Date().toLocaleString()}</p></header><div class="board">${svg}</div></body></html>`
+</head><body><header><p>Cloudeasy Devops Portal</p><h1>${escapeHtml(board.title)}</h1><p>Exported ${new Date().toLocaleString()}</p></header><div class="board">${svg}</div></body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')

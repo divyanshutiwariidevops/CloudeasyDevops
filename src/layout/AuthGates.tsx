@@ -12,7 +12,7 @@ export function ProtectedGate({ children }: { children: React.ReactNode }) {
     if (ready && !isAuthenticated) router.replace('/login')
   }, [isAuthenticated, ready, router])
 
-  if (!ready || !isAuthenticated) return <div className="app-boot">Loading Devops Portal…</div>
+  if (!ready || !isAuthenticated) return <div className="app-boot">Loading Cloudeasy Devops Portal…</div>
   return <>{children}</>
 }
 
@@ -25,7 +25,7 @@ export function GuestGate({ children }: { children: React.ReactNode }) {
     if (ready && isAuthenticated && pathname === '/login') router.replace('/dashboard')
   }, [isAuthenticated, pathname, ready, router])
 
-  if (!ready) return <div className="app-boot">Loading Devops Portal…</div>
+  if (!ready) return <div className="app-boot">Loading Cloudeasy Devops Portal…</div>
   if (isAuthenticated) return <div className="app-boot">Opening workspace…</div>
   return <>{children}</>
 }

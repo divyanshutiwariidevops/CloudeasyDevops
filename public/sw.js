@@ -1,4 +1,4 @@
-const CACHE = 'cloudeasy-devops-shell-v1'
+const CACHE = 'esp-devops-shell-v1'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting())

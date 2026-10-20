@@ -98,6 +98,8 @@ export function Documentation() {
   const [folderName, setFolderName] = useState('')
   const [namingFolder, setNamingFolder] = useState(false)
   const [autosave, setAutosave] = useState(() => localStorage.getItem(AUTOSAVE_KEY) !== 'off')
+  const [visibility, setVisibility] = useState<'private' | 'public'>('private')
+  const [visibilitySaving, setVisibilitySaving] = useState(false)
   const live = useRef({ title, html, activeId, font, size, autosave, canManage, folderId })
   live.current = { title, html, activeId, font, size, autosave, canManage, folderId }
 
@@ -130,12 +132,14 @@ export function Documentation() {
       setHtml('')
       setSavedAt('')
       setDirty(false)
+      setVisibility('private')
       window.setTimeout(() => syncEditor(''), 0)
       return
     }
     setActiveId(doc.id)
     setTitle(doc.title || '')
     setHtml(doc.html || '')
+    setVisibility(doc.visibility === 'public' ? 'public' : 'private')
     setFont(doc.font || 'IBM Plex Sans')
     setSize(doc.size || '14')
     setSavedAt(doc.updatedAt || '')
@@ -313,6 +317,23 @@ export function Documentation() {
     }
   }
 
+  const setDocVisibility = async (next: 'private' | 'public') => {
+    if (!canManage || !activeId || visibilitySaving) return
+    const previous = visibility
+    setVisibility(next)
+    setVisibilitySaving(true)
+    try {
+      const data = await updateDocApi(activeId, { visibility: next })
+      setDocs((current) => current.map((item) => (item.id === data.doc.id ? data.doc : item)))
+      pushToast(next === 'public' ? 'Document is public on the landing page' : 'Document is private')
+    } catch (error) {
+      setVisibility(previous)
+      pushToast(error instanceof Error ? error.message : 'Unable to update visibility', 'error')
+    } finally {
+      setVisibilitySaving(false)
+    }
+  }
+
   const currentHtml = () => editorRef.current?.innerHTML || html
 
   const exportWord = () => {
@@ -427,7 +448,10 @@ export function Documentation() {
                     <i className={`bi ${item.kind === 'folder' ? 'bi-folder-fill' : 'bi-file-earmark-text'}`} />
                     {item.title || 'Untitled'}
                   </strong>
-                  <span>{item.kind === 'folder' ? 'Folder' : item.preview || 'Empty document'}</span>
+                  <span>
+                    {item.kind === 'folder' ? 'Folder' : item.preview || 'Empty document'}
+                    {item.kind !== 'folder' && item.visibility === 'public' ? ' · Public' : ''}
+                  </span>
                   <em>{formatListDate(item.updatedAt)}</em>
                 </button>
               ))
@@ -468,6 +492,24 @@ export function Documentation() {
                   }}
                 />
                 <div className="docs-title-actions">
+                  <div className="docs-visibility" role="group" aria-label="Document visibility">
+                    <button
+                      type="button"
+                      className={visibility === 'private' ? 'active' : ''}
+                      disabled={!canManage || visibilitySaving}
+                      onClick={() => void setDocVisibility('private')}
+                    >
+                      Private
+                    </button>
+                    <button
+                      type="button"
+                      className={visibility === 'public' ? 'active' : ''}
+                      disabled={!canManage || visibilitySaving}
+                      onClick={() => void setDocVisibility('public')}
+                    >
+                      Public
+                    </button>
+                  </div>
                   <label className="docs-autosave-toggle">
                     <input
                       type="checkbox"

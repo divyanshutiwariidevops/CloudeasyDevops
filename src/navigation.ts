@@ -15,7 +15,6 @@ export const NAV_ITEMS: NavItem[] = [
   { path: '/quick-access', label: 'Quick Access', icon: 'bi-lightning-charge' },
   { path: '/personal-drive', label: 'Personal Drive', icon: 'bi-cloud-arrow-up' },
   { path: '/documentation', label: 'Documentation', icon: 'bi-journal-text' },
-  { path: '/terminal', label: 'Terminal', icon: 'bi-terminal' },
   { path: '/settings', label: 'Settings', icon: 'bi-gear' },
 ]
 

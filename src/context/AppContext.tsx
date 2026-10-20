@@ -54,6 +54,8 @@ import type {
   ToastType,
   UserProfile,
 } from '../types'
+import { fetchSite, saveSite as saveSiteApi } from '../api/site'
+import { defaultSite, type SiteContent } from '../data/site'
 import { isAdminEmail, normalizeRole, privilegesForEmail } from '../auth/privileges'
 import { uid } from '../utils'
 
@@ -101,6 +103,8 @@ interface AppContextValue {
   isAuthenticated: boolean
   ready: boolean
   isAdmin: boolean
+  site: SiteContent
+  saveSite: (site: SiteContent) => Promise<void>
   can: (privilege: string) => boolean
   login: (user: AccountUser) => void
   logout: () => void
@@ -169,6 +173,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [collections] = useState(initialCollections)
   const [servers] = useState(initialServers)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [site, setSite] = useState<SiteContent>(defaultSite)
 
   useEffect(() => {
     const storedTheme = localStorage.getItem(THEME_KEY)
@@ -183,6 +188,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
     setReady(true)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchSite()
+      .then((next) => {
+        if (!cancelled) setSite(next)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const saveSite = useCallback(async (next: SiteContent) => {
+    const saved = await saveSiteApi(next)
+    setSite(saved)
   }, [])
 
   useEffect(() => {
@@ -432,6 +454,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       ready,
       isAdmin,
+      site,
+      saveSite,
       can,
       login,
       logout,
@@ -470,6 +494,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       ready,
       isAdmin,
+      site,
+      saveSite,
       can,
       login,
       logout,

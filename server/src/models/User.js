@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true },
     name: { type: String, default: '' },
-    workspaceName: { type: String, default: 'Devops Portal' },
+    workspaceName: { type: String, default: 'Cloudeasy Devops Portal' },
     role: { type: String, default: 'DevOps Member' },
     team: { type: String, default: 'Platform Engineering' },
     timezone: { type: String, default: 'UTC' },

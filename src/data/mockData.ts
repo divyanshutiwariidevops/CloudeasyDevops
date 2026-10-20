@@ -13,7 +13,7 @@ export const defaultUser: UserProfile = {
   email: 'alex.rivera@esp.io',
   role: 'DevOps Lead',
   team: 'Platform Engineering',
-  workspaceName: 'Devops Portal',
+  workspaceName: 'Cloudeasy Devops Portal',
   timezone: 'UTC',
   dateFormat: 'YYYY-MM-DD',
   privileges: [],

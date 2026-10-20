@@ -50,7 +50,6 @@ export function Header() {
     markOneRead,
     projects,
     shortcuts,
-    servers,
     setTheme,
     theme,
     logout,
@@ -81,7 +80,6 @@ export function Header() {
       { id: 'p-quick', title: 'Quick Access', subtitle: 'Shortcuts', path: '/quick-access', icon: 'bi-lightning-charge' },
       { id: 'p-drive', title: 'Personal Drive', subtitle: 'Private files', path: '/personal-drive', icon: 'bi-cloud-arrow-up' },
       { id: 'p-docs', title: 'Documentation', subtitle: 'Notes and runbooks', path: '/documentation', icon: 'bi-journal-text' },
-      { id: 'p-term', title: 'Terminal', subtitle: 'Local shell', path: '/terminal', icon: 'bi-terminal' },
       { id: 'p-set', title: 'Settings', subtitle: 'Preferences', path: '/settings', icon: 'bi-gear' },
       { id: 'p-invite', title: 'Invitation', subtitle: 'Invite users', path: '/invitation', icon: 'bi-envelope' },
     ]
@@ -101,17 +99,10 @@ export function Header() {
         path: '/quick-access',
         icon: shortcut.icon,
       })),
-      ...servers.map((server) => ({
-        id: server.id,
-        title: server.name,
-        subtitle: server.ip,
-        path: '/terminal',
-        icon: 'bi-hdd',
-      })),
     ]
       .filter((item) => item.title.toLowerCase().includes(q) || item.subtitle.toLowerCase().includes(q))
       .slice(0, 8)
-  }, [projects, query, servers, shortcuts])
+  }, [projects, query, shortcuts])
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000)

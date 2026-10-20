@@ -1,8 +1,13 @@
+'use client'
+
+import { useApp } from '../context/AppContext'
+
 export function BrandLogo({ size = 32, className = '' }: { size?: number; className?: string }) {
+  const { site } = useApp()
   return (
     <img
-      src="/logo.png"
-      alt="Devops Portal"
+      src={site.logoUrl || '/logo.png'}
+      alt={site.brandName || 'Cloudeasy Devops Portal'}
       width={size}
       height={size}
       className={className}

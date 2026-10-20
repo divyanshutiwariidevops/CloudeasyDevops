@@ -11,7 +11,7 @@ import { classNames } from '../utils'
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { sidebarCollapsed, mobileOpen, setMobileOpen, can } = useApp()
+  const { sidebarCollapsed, mobileOpen, setMobileOpen, can, site } = useApp()
   const [pending, setPending] = useState(pathname)
 
   const closeMobile = () => setMobileOpen(false)
@@ -22,7 +22,6 @@ export function Sidebar() {
         if (item.path === '/invitation') return can('invitations.manage')
         if (item.path === '/dev-generator') return can('generator.use')
         if (item.path === '/personal-drive') return can('drive.view')
-        if (item.path === '/terminal') return can('ssh.connect')
         return true
       }),
     [can],
@@ -53,8 +52,7 @@ export function Sidebar() {
             <BrandLogo size={36} />
           </div>
           <div className="brand-copy">
-            <p className="brand-kicker">Inventory</p>
-            <p className="brand-title">Devops Portal</p>
+            <p className="brand-title">{site.brandName}</p>
           </div>
         </div>
 

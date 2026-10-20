@@ -63,7 +63,7 @@ export async function generateDevArtifact(kind, prompt) {
       Authorization: `Bearer ${process.env.OPENROUTER_API_KEY.trim()}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
-      'X-Title': 'Devops Portal',
+      'X-Title': 'Cloudeasy Devops Portal',
     },
     body: JSON.stringify({
       model,

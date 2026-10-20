@@ -9,6 +9,7 @@ const documentSchema = new mongoose.Schema(
     font: { type: String, default: 'IBM Plex Sans' },
     size: { type: String, default: '14' },
     kind: { type: String, default: 'file', enum: ['file', 'folder'] },
+    visibility: { type: String, default: 'private', enum: ['private', 'public'], index: true },
     parentId: { type: String, default: null, index: true },
   },
   { timestamps: true },

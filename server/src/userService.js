@@ -5,7 +5,7 @@ function seedNotifications() {
   return [
     {
       id: crypto.randomUUID(),
-      title: 'Welcome to Devops Portal',
+      title: 'Welcome to Cloudeasy Devops Portal',
       message: 'Your account is ready. Notification alerts are turned on.',
       time: 'Just now',
       read: false,
