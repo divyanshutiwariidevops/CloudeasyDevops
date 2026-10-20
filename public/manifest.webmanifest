@@ -1,0 +1,25 @@
+{
+  "name": "Cloudeasy Devops Portal",
+  "short_name": "Cloudeasy",
+  "description": "A blogging DevOps platform made by Divyanshu Tiwari.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1726",
+  "theme_color": "#0f1726",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
