@@ -1486,6 +1486,7 @@ app.use((error, req, res, next) => {
 })
 
 export { app, jwtSecret, loadAccount }
+export default app
 
 export async function bootServices() {
   assertRuntimeSecrets()
@@ -1496,7 +1497,13 @@ export async function bootServices() {
   }
 }
 
-if (process.env.NEXT_EMBED !== '1') {
+const runningOnVercel = process.env.VERCEL === '1'
+
+if (runningOnVercel) {
+  bootServices().catch((error) => {
+    console.error('API boot failed:', error instanceof Error ? error.message : error)
+  })
+} else if (process.env.NEXT_EMBED !== '1') {
   const httpServer = http.createServer(app)
   httpServer.listen(port, async () => {
     console.log(`Cloudeasy Devops Portal API running on http://localhost:${port}`)

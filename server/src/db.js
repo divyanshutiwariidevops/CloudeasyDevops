@@ -1,8 +1,12 @@
 import dns from 'node:dns'
 import mongoose from 'mongoose'
 
-dns.setServers(['8.8.8.8', '1.1.1.1'])
-dns.setDefaultResultOrder('ipv4first')
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1'])
+  dns.setDefaultResultOrder('ipv4first')
+} catch (error) {
+  console.warn('DNS server override skipped:', error instanceof Error ? error.message : error)
+}
 
 function resolvedMongoUri() {
   const uri = process.env.MONGODB_URI || ''
