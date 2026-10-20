@@ -54,7 +54,7 @@ async function sendFromBrowser(payload: {
     method: payload.method,
     headers,
     credentials: payload.useSession ? 'same-origin' : 'omit',
-    body: payload.method === 'GET' || payload.method === 'HEAD' ? undefined : payload.body || undefined,
+    body: payload.method === 'GET' ? undefined : payload.body || undefined,
   })
   const responseHeaders: Record<string, string> = {}
   response.headers.forEach((value, key) => {
